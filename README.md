@@ -14,12 +14,12 @@ For example:
 
 ## Solution Approach
 
-The solution implements an optimized Two-Sum based algorithm with single-threaded processing to find pairs with equal sums efficiently. Performance testing showed this approach consistently outperformed multi-threaded implementations for this specific problem.
+The solution implements an optimized Two-Sum based algorithm with single-threaded processing to find pairs with equal sums efficiently.
 
 ### Key Features
 
 1. **Object-Oriented Design**: Uses clear class organization with separation of concerns
-2. **Optimized Single-Threaded Algorithm**: Based on performance testing, a single-threaded approach outperformed multi-threading for this specific problem
+2. **Two-Sum Based Algorithm**: Implements an algorithm inspired by the classic Two-Sum problem for efficient pair finding
 3. **Smart Optimization**: Pre-sorts the array and uses efficient data structures to improve performance
 4. **Comprehensive Error Handling**: Validates inputs and gracefully handles edge cases
 5. **Extensive Testing**: Includes unit tests for various scenarios
@@ -144,13 +144,3 @@ Run all tests with:
 ```bash
 python3 main.py --test
 ```
-
-## Performance Results
-
-Performance varies depending on the input size:
-
-- Small arrays (<100 elements): Processes in milliseconds
-- Medium arrays (1000-5000 elements): Processes in seconds
-- Large arrays (>10000 elements): Processing time scales with the square of the input size
-
-The parallel implementation significantly improves performance on multi-core systems, especially for larger inputs.
