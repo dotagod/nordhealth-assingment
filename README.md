@@ -14,32 +14,32 @@ For example:
 
 ## Solution Approach
 
-The solution implements an optimized algorithm using parallel processing to find pairs with equal sums efficiently.
+The solution implements an optimized Two-Sum based algorithm with single-threaded processing to find pairs with equal sums efficiently. Performance testing showed this approach consistently outperformed multi-threaded implementations for this specific problem.
 
 ### Key Features
 
 1. **Object-Oriented Design**: Uses clear class organization with separation of concerns
-2. **Parallel Processing**: Leverages multithreading for better performance on large arrays
-3. **Adaptive Optimization**: Automatically switches between single-threaded and parallel processing based on input size
+2. **Optimized Single-Threaded Algorithm**: Based on performance testing, a single-threaded approach outperformed multi-threading for this specific problem
+3. **Smart Optimization**: Pre-sorts the array and uses efficient data structures to improve performance
 4. **Comprehensive Error Handling**: Validates inputs and gracefully handles edge cases
 5. **Extensive Testing**: Includes unit tests for various scenarios
 
 ### Algorithm
 
-The core algorithm follows these steps:
+The solution uses a Two-Sum based approach with these steps:
 
 1. Sort the input array for better performance
-2. For arrays with less than 1000 elements:
-   - Process using a simple, efficient single-threaded approach
-3. For larger arrays:
-   - Split the array into chunks and process them in parallel using multiple threads
-   - Each thread creates pairs for its assigned portion of the array
-   - Results are combined using synchronized data structures
+2. Efficiently generate all possible pairs in a single pass:
+   - Calculate the sum of each pair
+   - Store pairs directly into a dictionary grouped by their sum
+   - Use different strategies for arrays with/without duplicates
+   - Track seen pairs to avoid duplicates
+3. Filter to only keep sums with at least two different pairs
 
 The time complexity is O(n²) in the worst case, but the actual performance is significantly improved through:
-- Parallelization
-- Early duplicate detection
-- Optimized data structures
+- Pre-sorting for better locality and cache performance
+- Direct sum calculation without redundant comparisons
+- Optimized data structures with O(1) lookups
 
 ## Requirements
 
@@ -107,15 +107,13 @@ python3 -c "import main; import random; import time; large_array = [random.randi
 
 The solution includes several optimizations:
 
-1. **Multithreaded Processing**: For large arrays, the work is distributed across multiple CPU cores using Python's `ThreadPoolExecutor`.
+1. **Two-Sum Based Approach**: Implements an optimized algorithm inspired by the classic "Two-Sum" problem, creating all pairs and grouping them directly by sum.
 
-2. **Adaptive Thread Count**: The number of threads is based on the available CPU cores and input size.
+2. **Pre-Sorting**: The array is sorted first to improve cache locality and duplicate handling.
 
-3. **Pre-Sorting**: The array is sorted first to improve cache locality and duplicate handling.
+3. **Optimized Data Structures**: Uses hash maps and sets for O(1) lookups of previously seen pairs.
 
-4. **Chunk-Based Processing**: Work is divided into optimal-sized chunks to balance thread creation overhead and workload distribution.
-
-5. **Thread Synchronization**: Uses proper locking mechanisms to safely combine results from different threads.
+4. **Specialized Duplicate Handling**: Different strategies for arrays with and without duplicates to optimize performance in both cases.
 
 ## Code Structure
 

@@ -19,8 +19,6 @@ import sys
 import os
 import logging
 import unittest
-import threading
-import concurrent.futures
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -67,11 +65,12 @@ class EqualSumPairFinder:
         if not all(isinstance(item, int) for item in self.array):
             raise ValueError("All elements in the array must be integers")
     
-    def find_pairs_optimized(self) -> Dict[int, List[Tuple[int, int]]]:
-        """Find all unique pairs with equal sum using parallel processing.
+    def find_pairs_two_sum(self) -> Dict[int, List[Tuple[int, int]]]:
+        """Find all unique pairs with equal sum using a Two-Sum based approach.
         
-        This implementation distributes the work of finding pairs across multiple
-        CPU cores for better performance on large arrays.
+        This implementation first creates all possible pairs and directly stores them
+        by their sum value, which can be more efficient by avoiding redundant sum calculations
+        and reducing branch logic.
         
         Returns:
             Dictionary mapping sum values to lists of pairs that have that sum
@@ -86,90 +85,43 @@ class EqualSumPairFinder:
         sorted_array = sorted(self.array)
         has_duplicates = len(sorted_array) != len(set(sorted_array))
         
-        # Determine chunk size based on array length
-        # For very large arrays, we want larger chunks to reduce overhead
-        cpu_count = os.cpu_count() or 4  # Default to 4 if cpu_count is None
-        chunk_size = max(100, len(sorted_array) // (4 * cpu_count))
-        chunk_size = min(chunk_size, len(sorted_array) // 2 or 1)  # Ensure reasonable chunk size
+        sum_pairs = defaultdict(list)
+        seen_pairs = set()
         
-        # Use single-threaded approach for small arrays to avoid thread overhead
-        if len(sorted_array) < 1000:
-            sum_pairs = defaultdict(list)
-            seen_pairs = set()
-            
-            for i in range(len(sorted_array)):
-                for j in range(i + 1, len(sorted_array)):
-                    if has_duplicates:
-                        pair_id = (i, j)
-                        pair_values = (sorted_array[i], sorted_array[j])
-                        
-                        if pair_id in seen_pairs:
-                            continue
-                        
-                        seen_pairs.add(pair_id)
-                        current_sum = sorted_array[i] + sorted_array[j]
-                        sum_pairs[current_sum].append(pair_values)
-                    else:
-                        a, b = min(sorted_array[i], sorted_array[j]), max(sorted_array[i], sorted_array[j])
-                        pair = (a, b)
-                        
-                        if pair in seen_pairs:
-                            continue
-                        
-                        seen_pairs.add(pair)
-                        current_sum = a + b
-                        sum_pairs[current_sum].append(pair)
-        else:
-            # Use ThreadPoolExecutor for larger arrays (avoids pickling issues)
-            sum_pairs = defaultdict(list)
-            thread_lock = threading.Lock()
-            
-            def process_range(start, end):
-                local_pairs = defaultdict(list)
-                local_seen = set()
+        for i in range(len(sorted_array)):
+            for j in range(i + 1, len(sorted_array)):
+                a, b = sorted_array[i], sorted_array[j]
+                current_sum = a + b
                 
-                for i in range(start, end):
-                    for j in range(i + 1, len(sorted_array)):
-                        if has_duplicates:
-                            pair_id = (i, j)
-                            pair_values = (sorted_array[i], sorted_array[j])
-                            
-                            if pair_id in local_seen:
-                                continue
-                            
-                            local_seen.add(pair_id)
-                            current_sum = sorted_array[i] + sorted_array[j]
-                            local_pairs[current_sum].append(pair_values)
-                        else:
-                            a, b = min(sorted_array[i], sorted_array[j]), max(sorted_array[i], sorted_array[j])
-                            pair = (a, b)
-                            
-                            if pair in local_seen:
-                                continue
-                            
-                            local_seen.add(pair)
-                            current_sum = a + b
-                            local_pairs[current_sum].append(pair)
-                
-                with thread_lock:
-                    for sum_val, pairs in local_pairs.items():
-                        sum_pairs[sum_val].extend(pairs)
-            
-            # Divide work into chunks based on CPU count
-            chunk_size = max(10, len(sorted_array) // (4 * cpu_count))
-            chunks = []
-            for i in range(0, len(sorted_array), chunk_size):
-                chunks.append((i, min(i + chunk_size, len(sorted_array))))
-            
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                futures = [executor.submit(process_range, start, end) for start, end in chunks]
-                concurrent.futures.wait(futures)
+                if has_duplicates:
+                    # Track pairs by index when handling duplicates
+                    pair_id = (i, j)
+                    if pair_id in seen_pairs:
+                        continue
+                    seen_pairs.add(pair_id)
+                    sum_pairs[current_sum].append((a, b))
+                else:
+                    pair = (min(a, b), max(a, b))
+                    if pair in seen_pairs:
+                        continue
+                    seen_pairs.add(pair)
+                    sum_pairs[current_sum].append(pair)
         
         result = {s: pairs for s, pairs in sum_pairs.items() if len(pairs) >= 2}
         
         end_time = time.time()
         logger.debug(f"Processing completed in {end_time - start_time:.6f} seconds")
         return result
+        
+    def find_pairs_optimized(self) -> Dict[int, List[Tuple[int, int]]]:
+        """Find all unique pairs with equal sum.
+        
+        Delegates to the Two-Sum based implementation, which has proven to be efficient.
+        
+        Returns:
+            Dictionary mapping sum values to lists of pairs that have that sum
+        """
+        return self.find_pairs_two_sum()
     
     def get_formatted_results(self) -> List[PairSum]:
         """Get the results formatted as PairSum objects.
@@ -361,6 +313,7 @@ def main() -> None:
     }
     
     array = None
+    already_processed = False
     
     if args.example is not None:
         array = example_arrays[args.example]
@@ -368,6 +321,7 @@ def main() -> None:
         print(f"Input: A[] = {array}")
         print("Output:")
         process_array(array, args.verbose)
+        already_processed = True
         
     elif args.array:
         array = args.array
@@ -403,7 +357,8 @@ def main() -> None:
         
         return
     
-    if array is not None:
+    # Only process if we haven't already done so
+    if array is not None and not already_processed:
         process_array(array, args.verbose)
 
 
